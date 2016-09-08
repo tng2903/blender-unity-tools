@@ -101,24 +101,32 @@ class PeaBatchExport(bpy.types.Operator):
 
         # select all visible meshes
         mesh=[]
-        bpy.ops.object.select_all(action='DESELECT')
-        bpy.ops.object.select_by_type(type='MESH')
-        col = bpy.context.selected_objects
+        #bpy.ops.object.select_all(action='DESELECT')
+        #bpy.ops.object.select_by_type(type='MESH')		
+        #col = bpy.context.selected_objects
+		
+		# preserve current selection
+        orig_selection = bpy.context.selected_objects
+		
+		# select the export group
+        group = bpy.data.groups.get("Export");
+        assert group is not None
+        col = group.objects
 
         # convert path to windows friendly notation
         dir = os.path.dirname(bpy.path.abspath(context.scene.pea_batch_export_path))
         # cursor to origin
-        bpy.context.scene.cursor_location = (0.0, 0.0, 0.0)
-
+        bpy.context.scene.cursor_location = (0.0, 0.0, 0.0)		
+		
         for obj in col:
             # select only current object
             bpy.ops.object.select_all(action='DESELECT')
             obj.select = True
             # freeze location, rotation and scale
-            bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+            ##bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
             # set pivot point to cursor location
-            bpy.ops.object.mode_set(mode='OBJECT')
-            bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
+            ##bpy.ops.object.mode_set(mode='OBJECT')
+            ##bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
             # store mesh
             mesh.append(obj)
             # use mesh name for file name
@@ -127,7 +135,12 @@ class PeaBatchExport(bpy.types.Operator):
             print("exporting: " + fn)
             # export fbx
             bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, axis_forward='-Z', axis_up='Y')
-
+		
+		# restore original selection
+        bpy.ops.object.select_all(action='DESELECT')
+        for obj in orig_selection:
+            obj.select = True
+		
         return {'FINISHED'}
 
 
