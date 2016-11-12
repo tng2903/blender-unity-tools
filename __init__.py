@@ -134,7 +134,8 @@ class PeaBatchExport(bpy.types.Operator):
             fn = os.path.join(dir, name)
             print("exporting: " + fn)
             # export fbx
-            bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, axis_forward='-Z', axis_up='Y')
+			# have to set global_scale to 100 so unity sets the "File Scale" in the importer to 1 
+            bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, global_scale=100,axis_forward='-Z', axis_up='Y')
 		
 		# restore original selection
         bpy.ops.object.select_all(action='DESELECT')
