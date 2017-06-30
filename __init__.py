@@ -1,5 +1,6 @@
 import bpy
 import os
+#from bpy import context -- Standalone testing only
 
 bl_info = {
  "name": "Unity Tools",
@@ -28,18 +29,14 @@ class UnityBatchExportPanel(bpy.types.Panel):
 
         layout = self.layout
 
-        # batch export
+        # current selection export
         col = layout.column(align=True)
         col.label(text="Batch export:")
-        col.prop(context.scene, 'pea_batch_export_path')
-        row = col.row(align=True)
-        row.operator("pea.batch_export", text="Batch Export", icon='EXPORT')
-		
-		# current object export
+        col.prop(context.scene, 'pea_batch_export_path')		
         col = layout.column(align=True)
         row = col.row(align=True)
         row.operator("pea.batch_export_selection", text="Batch Export Selection", icon='EXPORT')
-		
+        
         # reset scale
         col = layout.column(align=True)
         col.label(text="Unity Units Setup:")
@@ -90,65 +87,6 @@ class UnityBatchExportPanel(bpy.types.Panel):
         row.operator("pea.freeze_rot_scale", text="Freeze Rotation+Scale", icon='FILE_REFRESH')
 
 
-class PeaBatchExport(bpy.types.Operator):
-    bl_idname = "pea.batch_export"
-    bl_label = "Choose Directory"
-
-    def execute(self, context):
-        print ("execute Pea_batch_export")
-
-        basedir = os.path.dirname(bpy.data.filepath)
-        if not basedir:
-            raise Exception("Blend file is not saved")
-
-        if context.scene.pea_batch_export_path == "":
-            raise Exception("Export path not set")
-
-        # select all visible meshes
-        mesh=[]
-        #bpy.ops.object.select_all(action='DESELECT')
-        #bpy.ops.object.select_by_type(type='MESH')		
-        #col = bpy.context.selected_objects
-		
-		# preserve current selection
-        orig_selection = bpy.context.selected_objects
-		
-		# select the export group
-        group = bpy.data.groups.get("Export");
-        assert group is not None
-        col = group.objects
-
-        # convert path to windows friendly notation
-        dir = os.path.dirname(bpy.path.abspath(context.scene.pea_batch_export_path))
-        # cursor to origin
-        bpy.context.scene.cursor_location = (0.0, 0.0, 0.0)		
-		
-        for obj in col:
-            # select only current object
-            bpy.ops.object.select_all(action='DESELECT')
-            obj.select = True
-            # freeze location, rotation and scale
-            ##bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-            # set pivot point to cursor location
-            ##bpy.ops.object.mode_set(mode='OBJECT')
-            ##bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
-            # store mesh
-            mesh.append(obj)
-            # use mesh name for file name
-            name = bpy.path.clean_name(obj.name)
-            fn = os.path.join(dir, name)
-            print("exporting: " + fn)
-            # export fbx
-			# have to set global_scale to 100 so unity sets the "File Scale" in the importer to 1 
-            bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, global_scale=100,axis_forward='-Z', axis_up='Y')
-		
-		# restore original selection
-        bpy.ops.object.select_all(action='DESELECT')
-        for obj in orig_selection:
-            obj.select = True
-		
-        return {'FINISHED'}
-
 class PeaBatchExportSelection(bpy.types.Operator):
     bl_idname = "pea.batch_export_selection"
     bl_label = "Choose Directory"
@@ -163,41 +101,44 @@ class PeaBatchExportSelection(bpy.types.Operator):
         if context.scene.pea_batch_export_path == "":
             raise Exception("Export path not set")
 
-        mesh=[]
-			
-		# preserve current selection
-        orig_selection = bpy.context.selected_objects		
+        # preserve current selection
+        orig_selection = bpy.context.selected_objects       
 
         # convert path to windows friendly notation
         dir = os.path.dirname(bpy.path.abspath(context.scene.pea_batch_export_path))
         # cursor to origin
-        bpy.context.scene.cursor_location = (0.0, 0.0, 0.0)		
-		
+        bpy.context.scene.cursor_location = (0.0, 0.0, 0.0)     
+        
         for obj in orig_selection:
+        
+            # don't process if has parent
+            if obj.parent != None:
+               continue
+        
             # select only current object
             bpy.ops.object.select_all(action='DESELECT')
             obj.select = True
-            # freeze location, rotation and scale
-            ##bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-            # set pivot point to cursor location
-            ##bpy.ops.object.mode_set(mode='OBJECT')
-            ##bpy.ops.object.origin_set(type='ORIGIN_CURSOR')
-            # store mesh
-            mesh.append(obj)
+
+            # process children
+            for obj2 in orig_selection:
+                if obj != obj2 and obj2.parent == obj:
+                   obj2.select = True
+                   print("Adding child: " + obj2.name);
+            
             # use mesh name for file name
             name = bpy.path.clean_name(obj.name)
             fn = os.path.join(dir, name)
             print("exporting: " + fn)
             # export fbx
-			# have to set global_scale to 100 so unity sets the "File Scale" in the importer to 1 
+            # have to set global_scale to 100 so unity sets the "File Scale" in the importer to 1 
             bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, global_scale=100,axis_forward='-Z', axis_up='Y')
-		
-		# restore original selection
+        
+        # restore original selection
         bpy.ops.object.select_all(action='DESELECT')
         for obj in orig_selection:
             obj.select = True
-		
-        return {'FINISHED'}		
+        
+        return {'FINISHED'}     
 
 class PeaBlenderUnits(bpy.types.Operator):
     bl_idname = "pea.blender_units"
