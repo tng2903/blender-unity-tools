@@ -281,7 +281,7 @@ def register():
         subtype='DIR_PATH'
     )
     bpy.utils.register_class(UnityBatchExportPanel)
-    bpy.utils.register_class(PeaBatchExport)
+    #bpy.utils.register_class(PeaBatchExport)
     bpy.utils.register_class(PeaBatchExportSelection)
     bpy.utils.register_class(PeaBlenderUnits)
     bpy.utils.register_class(PeaVertexSelect)
@@ -299,7 +299,7 @@ def register():
 def unregister():
     del bpy.types.Scene.pea_batch_export_path
     bpy.utils.unregister_class(UnityBatchExportPanel)
-    bpy.utils.unregister_class(PeaBatchExport)
+    #bpy.utils.unregister_class(PeaBatchExport)
     bpy.utils.register_class(PeaBatchExportSelection)
     bpy.utils.unregister_class(PeaBlenderUnits)
     bpy.utils.unregister_class(PeaVertexSelect)
