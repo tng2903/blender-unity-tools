@@ -32,10 +32,12 @@ class UnityBatchExportPanel(bpy.types.Panel):
         # current selection export
         col = layout.column(align=True)
         col.label(text="Batch export:")
-        col.prop(context.scene, 'pea_batch_export_path')		
+        col.prop(context.scene, 'pea_batch_export_path')
+        col.prop(context.scene, 'pea_global_scale')
+        col.prop(context.scene, 'pea_bake_space_transform')
         col = layout.column(align=True)
         row = col.row(align=True)
-        row.operator("pea.batch_export_selection", text="Batch Export Selection", icon='EXPORT')
+        row.operator("pea.batch_export_selection", text="Batch Export Selection", icon='EXPORT')			
         
         # reset scale
         col = layout.column(align=True)
@@ -130,8 +132,9 @@ class PeaBatchExportSelection(bpy.types.Operator):
             fn = os.path.join(dir, name)
             print("exporting: " + fn)
             # export fbx
-            # have to set global_scale to 100 so unity sets the "File Scale" in the importer to 1 
-            bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, global_scale=100,axis_forward='-Z', axis_up='Y')
+            # have to set global_scale to 0.01 so unity sets the "File Scale" in the importer to 1 
+			# bake_space_transform is experimental
+            bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, global_scale=context.scene.pea_global_scale,bake_space_transform=context.scene.pea_bake_space_transform, axis_forward='-Z', axis_up='Y')
         
         # restore original selection
         bpy.ops.object.select_all(action='DESELECT')
@@ -280,6 +283,19 @@ def register():
         description="Define the path where to export",
         subtype='DIR_PATH'
     )
+	
+    bpy.types.Scene.pea_bake_space_transform = bpy.props.BoolProperty (
+        name="Bake Space Transform",
+        description="This will apply correct scale and rotation to the object.",
+        default=True
+    )
+	
+    bpy.types.Scene.pea_global_scale = bpy.props.FloatProperty(
+        name="Global Scale",
+        description="Global scale to use during export",
+        default=1
+	)
+	
     bpy.utils.register_class(UnityBatchExportPanel)
     #bpy.utils.register_class(PeaBatchExport)
     bpy.utils.register_class(PeaBatchExportSelection)
@@ -298,6 +314,7 @@ def register():
 
 def unregister():
     del bpy.types.Scene.pea_batch_export_path
+    del bpy.types.Scene.pea_bake_space_transform
     bpy.utils.unregister_class(UnityBatchExportPanel)
     #bpy.utils.unregister_class(PeaBatchExport)
     bpy.utils.register_class(PeaBatchExportSelection)
