@@ -6,8 +6,8 @@ bl_info = {
  "name": "Unity Tools",
  "description": "Tools to batch export fbx files",
  "author": "Patrick Jezek",
- "blender": (2, 7, 5),
- "version": (1, 0, 0),
+ "blender": (2, 9, 0),
+ "version": (1, 1, 0),
  "category": "Unity",
  "location": "",
  "warning": "",
@@ -109,7 +109,7 @@ class PeaBatchExportSelection(bpy.types.Operator):
         # convert path to windows friendly notation
         dir = os.path.dirname(bpy.path.abspath(context.scene.pea_batch_export_path))
         # cursor to origin
-        bpy.context.scene.cursor_location = (0.0, 0.0, 0.0)     
+        bpy.context.scene.cursor.location = (0.0, 0.0, 0.0)     
         
         for obj in orig_selection:
         
@@ -119,12 +119,12 @@ class PeaBatchExportSelection(bpy.types.Operator):
         
             # select only current object
             bpy.ops.object.select_all(action='DESELECT')
-            obj.select = True
+            obj.select_set(True)
 
             # process children
             for obj2 in orig_selection:
                 if obj != obj2 and obj2.parent == obj:
-                   obj2.select = True
+                   obj2.select_set(True)
                    print("Adding child: " + obj2.name);
             
             # use mesh name for file name
@@ -133,13 +133,13 @@ class PeaBatchExportSelection(bpy.types.Operator):
             print("exporting: " + fn)
             # export fbx
             # have to set global_scale to 0.01 so unity sets the "File Scale" in the importer to 1 
-			# bake_space_transform is experimental
+            # bake_space_transform is experimental
             bpy.ops.export_scene.fbx(filepath=fn + ".fbx", use_selection=True, global_scale=context.scene.pea_global_scale,bake_space_transform=context.scene.pea_bake_space_transform, axis_forward='-Z', axis_up='Y')
         
         # restore original selection
         bpy.ops.object.select_all(action='DESELECT')
         for obj in orig_selection:
-            obj.select = True
+            obj.select_set(True)
         
         return {'FINISHED'}     
 
@@ -283,19 +283,19 @@ def register():
         description="Define the path where to export",
         subtype='DIR_PATH'
     )
-	
+    
     bpy.types.Scene.pea_bake_space_transform = bpy.props.BoolProperty (
         name="Bake Space Transform",
         description="This will apply correct scale and rotation to the object.",
         default=True
     )
-	
+    
     bpy.types.Scene.pea_global_scale = bpy.props.FloatProperty(
         name="Global Scale",
         description="Global scale to use during export",
         default=1
-	)
-	
+    )
+    
     bpy.utils.register_class(UnityBatchExportPanel)
     #bpy.utils.register_class(PeaBatchExport)
     bpy.utils.register_class(PeaBatchExportSelection)
