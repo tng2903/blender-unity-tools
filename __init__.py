@@ -3,12 +3,12 @@ import os
 #from bpy import context -- Standalone testing only
 
 bl_info = {
- "name": "Unity Tools",
+ "name": "Batch Export Tool",
  "description": "Tools to batch export fbx files",
  "author": "Patrick Jezek",
  "blender": (2, 9, 0),
  "version": (1, 1, 0),
- "category": "Unity",
+ "category": "Batch Export",
  "location": "",
  "warning": "",
  "wiki_url": "",
@@ -18,8 +18,8 @@ bl_info = {
 
 class UnityBatchExportPanel(bpy.types.Panel):
 
-    bl_idname = "PEA_unity_tools"
-    bl_label = "Unity Tools"
+    bl_idname = "PEA_Batch_Export_tools"
+    bl_label = "Batch Export Tools"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'TOOLS'
     bl_context = "objectmode"
